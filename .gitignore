@@ -1,0 +1,26 @@
+# ---------- NODE ----------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ---------- PYTHON ----------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+venv/
+.env.local
+
+# ---------- REACT ----------
+build/
+dist/
+
+# ---------- GENERAL ----------
+.DS_Store
+Thumbs.db
+
+# ---------- LOGS ----------
+logs/
+*.log
