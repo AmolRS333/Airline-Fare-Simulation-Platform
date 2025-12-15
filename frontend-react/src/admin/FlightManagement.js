@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { adminService } from '../services';
+import { airlineService, airportService } from '../services';
 import { formatDate, formatTime } from '../utils/dateTime';
 
 const FlightManagement = () => {
@@ -9,6 +10,8 @@ const FlightManagement = () => {
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [airlines, setAirlines] = useState([]);
+  const [airports, setAirports] = useState([]);
   
   const [formData, setFormData] = useState({
     flightNumber: '',
@@ -27,6 +30,7 @@ const FlightManagement = () => {
 
   useEffect(() => {
     fetchFlights();
+    fetchAirlinesAndAirports();
   }, []);
 
   const fetchFlights = async () => {
@@ -40,6 +44,19 @@ const FlightManagement = () => {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAirlinesAndAirports = async () => {
+    try {
+      const [airlinesRes, airportsRes] = await Promise.all([
+        airlineService.getAirlines(),
+        airportService.getAirports()
+      ]);
+      setAirlines(airlinesRes.data);
+      setAirports(airportsRes.data);
+    } catch (err) {
+      console.error('Failed to load airlines/airports', err);
     }
   };
 
@@ -142,6 +159,48 @@ const FlightManagement = () => {
               required
               className="px-3 py-2 border border-gray-300 rounded"
             />
+            <select
+              name="airline"
+              value={formData.airline}
+              onChange={handleInputChange}
+              required
+              className="px-3 py-2 border border-gray-300 rounded"
+            >
+              <option value="">Select Airline</option>
+              {airlines.map(airline => (
+                <option key={airline._id} value={airline._id}>
+                  {airline.name} ({airline.iata})
+                </option>
+              ))}
+            </select>
+            <select
+              name="origin"
+              value={formData.origin}
+              onChange={handleInputChange}
+              required
+              className="px-3 py-2 border border-gray-300 rounded"
+            >
+              <option value="">Select Origin Airport</option>
+              {airports.map(airport => (
+                <option key={airport._id} value={airport._id}>
+                  {airport.city} ({airport.iata})
+                </option>
+              ))}
+            </select>
+            <select
+              name="destination"
+              value={formData.destination}
+              onChange={handleInputChange}
+              required
+              className="px-3 py-2 border border-gray-300 rounded"
+            >
+              <option value="">Select Destination Airport</option>
+              {airports.map(airport => (
+                <option key={airport._id} value={airport._id}>
+                  {airport.city} ({airport.iata})
+                </option>
+              ))}
+            </select>
             <input
               type="text"
               name="aircraft"

@@ -227,7 +227,7 @@ const BookingManagement = () => {
                     Confirm Booking
                   </button>
                 )}
-                {selectedBooking.status !== 'cancelled' && (
+                {selectedBooking.status !== 'cancelled' && selectedBooking.status !== 'refunded' && (
                   <button
                     onClick={() => {
                       handleCancel(selectedBooking._id);
@@ -236,6 +236,20 @@ const BookingManagement = () => {
                     className="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
                   >
                     Cancel Booking
+                  </button>
+                )}
+                {selectedBooking.status === 'confirmed' && (
+                  <button
+                    onClick={() => {
+                      const percentage = prompt('Enter refund percentage (0-100):', '100');
+                      if (percentage !== null && !isNaN(percentage)) {
+                        handleRefund(selectedBooking._id, parseFloat(percentage));
+                        setSelectedBooking(null);
+                      }
+                    }}
+                    className="flex-1 px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
+                  >
+                    Process Refund
                   </button>
                 )}
               </div>
