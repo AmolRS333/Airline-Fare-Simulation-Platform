@@ -14,7 +14,7 @@ async function run() {
       email: process.env.SMOKE_TEST_USER_EMAIL || 'customer@test.com',
       password: process.env.SMOKE_TEST_USER_PASSWORD || 'Test@123',
     });
-    const token = loginResp.data.token;
+    const token = loginResp.data.accessToken;
     console.log('Logged in as test user');
 
     const auth = { headers: { Authorization: `Bearer ${token}` } };
@@ -77,7 +77,10 @@ async function run() {
 
     console.log('Smoke test: completed successfully (booking created then cancelled)');
   } catch (err) {
-    console.error('Smoke test error:', err.response?.data || err.message);
+    console.error('Smoke test error:', err.response?.data || err.message || err);
+    if (err.response?.data) {
+      console.error('Response data:', JSON.stringify(err.response.data, null, 2));
+    }
     process.exitCode = 1;
   }
 }

@@ -17,15 +17,15 @@ export const generatePDF = async (booking, flight, airline, originAirport, destA
   };
 
   // Header
-  drawText('FLIGHT BOOKING RECEIPT', 16, rgb(0, 51, 102));
+  drawText('FLIGHT BOOKING RECEIPT', 16, rgb(0, 0.2, 0.4));
   yPos -= 10;
 
-  drawText(`PNR: ${booking.pnr}`, 14, rgb(0, 102, 0));
+  drawText(`PNR: ${booking.pnr}`, 14, rgb(0, 0.4, 0));
   drawText(`Confirmation #: ${booking.id}`, 11);
   drawText(`Booking Date: ${new Date(booking.createdAt).toLocaleString()}`, 11);
   yPos -= 10;
 
-  drawText('FLIGHT DETAILS', 14, rgb(0, 51, 102));
+  drawText('FLIGHT DETAILS', 14, rgb(0, 0.2, 0.4));
   drawText(`Flight: ${airline?.code}${flight?.flightNumber}`, 11);
   drawText(`From: ${originAirport?.iata} (${originAirport?.name})`, 11);
   drawText(`To: ${destAirport?.iata} (${destAirport?.name})`, 11);
@@ -34,19 +34,19 @@ export const generatePDF = async (booking, flight, airline, originAirport, destA
   drawText(`Arrival: ${new Date(flight?.arrivalTime).toLocaleTimeString()}`, 11);
   yPos -= 10;
 
-  drawText('PASSENGER DETAILS', 14, rgb(0, 51, 102));
+  drawText('PASSENGER DETAILS', 14, rgb(0, 0.2, 0.4));
   booking.passengers?.forEach((passenger, index) => {
     drawText(`Passenger ${index + 1}: ${passenger.name}`, 11);
     drawText(`Email: ${passenger.email}`, 11);
   });
   yPos -= 10;
 
-  drawText('SEAT ASSIGNMENT', 14, rgb(0, 51, 102));
+  drawText('SEAT ASSIGNMENT', 14, rgb(0, 0.2, 0.4));
   drawText(`Seats: ${booking.seatNumbers?.join(', ')}`, 11);
   yPos -= 10;
 
-  drawText('PRICING', 14, rgb(0, 51, 102));
-  drawText(`Total Amount Paid: $${booking.pricePaid?.toFixed(2)}`, 12, rgb(0, 102, 0));
+  drawText('PRICING', 14, rgb(0, 0.2, 0.4));
+  drawText(`Total Amount Paid: $${booking.pricePaid?.toFixed(2)}`, 12, rgb(0, 0.4, 0));
 
   const pdfBytes = await pdfDoc.save();
   const blob = new Blob([pdfBytes], { type: 'application/pdf' });
@@ -86,7 +86,7 @@ export const generateTicketPDF = async (booking, flight) => {
     };
 
     // Header - Airline Logo Area
-    drawText('✈ FLIGHT BOOKING CONFIRMATION ✈', 18, rgb(0, 51, 102));
+    drawText('FLIGHT BOOKING CONFIRMATION', 18, rgb(0, 0.2, 0.4));
     yPos -= 5;
     drawLine();
 
@@ -96,15 +96,15 @@ export const generateTicketPDF = async (booking, flight) => {
       y: yPos - 30,
       width: width - 80,
       height: 40,
-      borderColor: rgb(0, 102, 0),
+      borderColor: rgb(0, 0.4, 0),
       borderWidth: 2,
-      color: rgb(220, 255, 220),
+      color: rgb(0.86, 1, 0.86),
     });
-    drawText(`BOOKING REFERENCE: ${booking.pnr}`, 16, rgb(0, 102, 0), 50);
+    drawText(`BOOKING REFERENCE: ${booking.pnr}`, 16, rgb(0, 0.4, 0), 50);
     yPos -= 35;
 
     // Flight Information
-    drawText('FLIGHT INFORMATION', 12, rgb(0, 51, 102));
+    drawText('FLIGHT INFORMATION', 12, rgb(0, 0.2, 0.4));
     drawLine(5);
 
     const flightInfo = `${flight.airline?.code || 'XX'} ${flight.flightNumber || 'XXXX'}`;
@@ -137,7 +137,7 @@ export const generateTicketPDF = async (booking, flight) => {
     drawLine();
 
     // Passenger Details
-    drawText('PASSENGER DETAILS', 12, rgb(0, 51, 102));
+    drawText('PASSENGER DETAILS', 12, rgb(0, 0.2, 0.4));
     drawLine(5);
 
     booking.passengers?.forEach((passenger, index) => {
@@ -147,7 +147,7 @@ export const generateTicketPDF = async (booking, flight) => {
         rgb(0, 0, 0),
         50
       );
-      drawText(`Seat: ${booking.seatNumbers?.[index] || 'TBD'}`, 10, rgb(51, 51, 51), 60);
+      drawText(`Seat: ${booking.seatNumbers?.[index] || 'TBD'}`, 10, rgb(0.2, 0.2, 0.2), 60);
       if (index < booking.passengers.length - 1) {
         yPos -= 5;
       }
@@ -157,7 +157,7 @@ export const generateTicketPDF = async (booking, flight) => {
     drawLine();
 
     // Booking Summary
-    drawText('BOOKING SUMMARY', 12, rgb(0, 51, 102));
+    drawText('BOOKING SUMMARY', 12, rgb(0, 0.2, 0.4));
     drawLine(5);
 
     drawText(`Total Passengers: ${booking.passengers?.length || 0}`, 11, rgb(0, 0, 0), 50);
@@ -169,24 +169,24 @@ export const generateTicketPDF = async (booking, flight) => {
       y: yPos - 25,
       width: width - 80,
       height: 25,
-      color: rgb(240, 240, 240),
-      borderColor: rgb(0, 51, 102),
+      color: rgb(0.94, 0.94, 0.94),
+      borderColor: rgb(0, 0.2, 0.4),
       borderWidth: 2,
     });
 
-    drawText(`TOTAL PAID: $${booking.pricePaid?.toFixed(2) || '0.00'}`, 14, rgb(0, 102, 0), 50);
+    drawText(`TOTAL PAID: $${booking.pricePaid?.toFixed(2) || '0.00'}`, 14, rgb(0, 0.4, 0), 50);
     yPos -= 15;
 
     // Footer
     drawLine();
-    drawText('Booking Status: CONFIRMED', 10, rgb(0, 102, 0), 50);
+    drawText('Booking Status: CONFIRMED', 10, rgb(0, 0.4, 0), 50);
     drawText(
       `Confirmation Date: ${new Date(booking.createdAt).toLocaleString()}`,
       10,
-      rgb(51, 51, 51),
+      rgb(0.2, 0.2, 0.2),
       50
     );
-    drawText('Thank you for your booking! Have a great flight!', 10, rgb(102, 102, 102), 50);
+    drawText('Thank you for your booking! Have a great flight!', 10, rgb(0.4, 0.4, 0.4), 50);
 
     // Generate and download PDF
     const pdfBytes = await pdfDoc.save();

@@ -10,5 +10,6 @@ router.post('/forgot-password', authLimiter, authController.forgotPassword);
 router.post('/refresh-token', refreshAccessToken);
 router.get('/profile', authenticateToken, authController.getProfile);
 router.put('/profile', authenticateToken, authController.updateProfile);
+router.post('/change-password', authenticateToken, authController.changePassword);
 
 module.exports = router;

@@ -86,7 +86,7 @@ const selectSeats = async (req, res) => {
 
 const createBooking = async (req, res) => {
   try {
-    const { flightId, seatNumbers, passengers } = req.body;
+    const { flightId, seatNumbers, passengers, seatClass = 'economy' } = req.body;
     const userId = req.user.userId;
 
     // Validate flight exists
@@ -104,14 +104,17 @@ const createBooking = async (req, res) => {
     }
 
     // Get current dynamic price
-    let pricePaid = flight.currentDynamicPrice || flight.baseFare;
-    pricePaid = pricePaid * seatNumbers.length;
+    let basePricePaid = flight.currentDynamicPrice || flight.baseFare;
+    
+    // Apply class pricing multiplier if flight has class info
+    const classMultiplier = flight.seatClasses?.[seatClass]?.pricingMultiplier || 1;
+    let pricePaid = basePricePaid * seatNumbers.length * classMultiplier;
 
     // Simulate payment
     const payment = simulatePayment(pricePaid);
 
     if (!payment.success) {
-      // Release locked seats
+      // Release locked seats on payment failure
       await releaseSeats(flightId, seatNumbers);
       return res.status(400).json({
         message: 'Payment failed',
@@ -122,17 +125,19 @@ const createBooking = async (req, res) => {
     // Generate PNR
     const pnr = generatePNR();
 
-    // Create booking
+    // Create booking with CONFIRMED status (payment successful = auto-confirmed)
     const booking = new Booking({
       userId,
       flightId,
       pnr,
       seatNumbers,
+      seatClass,
       passengers,
       pricePaid,
       baseFarePerSeat: flight.baseFare,
+      classPricingMultiplier: classMultiplier,
       dynamicPricingApplied: flight.currentDynamicPrice > flight.baseFare,
-      status: 'pending',
+      status: 'confirmed', // Auto-confirm on successful payment
       paymentStatus: 'completed',
       seatLockExpiry: new Date(Date.now() + SEAT_LOCK_DURATION),
     });
@@ -171,6 +176,8 @@ const createBooking = async (req, res) => {
       const origin = await flight.populate('origin');
       const destination = await flight.populate('destination');
       await saveReceiptToFile(booking, flight, user, airline, origin, destination);
+      booking.receiptGenerated = true;
+      await booking.save();
     } catch (pdfError) {
       console.error('Error generating receipt:', pdfError);
     }
@@ -191,8 +198,19 @@ const createBooking = async (req, res) => {
 const getBookings = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const bookings = await Booking.find({ userId })
+    const userRole = req.user.role;
+
+    // Build query based on role (data privacy enforcement)
+    let query = {};
+    if (userRole !== 'admin') {
+      // Regular users can only see their own bookings
+      query.userId = userId;
+    }
+    // Admins can see all bookings (no userId filter)
+
+    const bookings = await Booking.find(query)
       .populate('flightId')
+      .populate('userId', 'name email')
       .sort({ createdAt: -1 });
 
     res.json(bookings);
@@ -222,14 +240,15 @@ const cancelBooking = async (req, res) => {
   try {
     const { bookingId } = req.params;
     const userId = req.user.userId;
+    const userRole = req.user.role;
 
     const booking = await Booking.findById(bookingId);
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
     }
 
-    // Verify ownership
-    if (booking.userId.toString() !== userId) {
+    // Verify ownership (users can only cancel their own; admins can cancel any)
+    if (userRole !== 'admin' && booking.userId.toString() !== userId) {
       return res.status(403).json({ message: 'Unauthorized' });
     }
 
@@ -248,6 +267,7 @@ const cancelBooking = async (req, res) => {
     booking.status = 'cancelled';
     booking.paymentStatus = 'refunded';
     booking.refundAmount = refundAmount;
+    booking.refundPercentage = refundPercentage;
     booking.cancellationDate = new Date();
     await booking.save();
 
@@ -275,7 +295,7 @@ const cancelBooking = async (req, res) => {
 
     // Send cancellation email
     try {
-      const user = await User.findById(userId);
+      const user = await User.findById(booking.userId);
       await sendCancellationEmail(user.email, {
         passengerName: booking.passengers[0].name,
         pnr: booking.pnr,

@@ -1,15 +1,39 @@
 import { DateTime } from 'luxon';
 
 export const formatDate = (date, format = 'dd LLL yyyy') => {
-  return DateTime.fromISO(new Date(date).toISOString()).toFormat(format);
+  if (!date) return 'N/A';
+  try {
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) return 'N/A';
+    return DateTime.fromISO(dateObj.toISOString()).toFormat(format);
+  } catch (err) {
+    console.error('Date formatting error:', err);
+    return 'N/A';
+  }
 };
 
 export const formatTime = (date, format = 'HH:mm') => {
-  return DateTime.fromISO(new Date(date).toISOString()).toFormat(format);
+  if (!date) return 'N/A';
+  try {
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) return 'N/A';
+    return DateTime.fromISO(dateObj.toISOString()).toFormat(format);
+  } catch (err) {
+    console.error('Time formatting error:', err);
+    return 'N/A';
+  }
 };
 
 export const formatDateTime = (date, format = 'dd LLL yyyy HH:mm') => {
-  return DateTime.fromISO(new Date(date).toISOString()).toFormat(format);
+  if (!date) return 'N/A';
+  try {
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) return 'N/A';
+    return DateTime.fromISO(dateObj.toISOString()).toFormat(format);
+  } catch (err) {
+    console.error('DateTime formatting error:', err);
+    return 'N/A';
+  }
 };
 
 export const getDurationString = (minutes) => {

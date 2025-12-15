@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { bookingService } from '../services';
+import { AuthContext } from '../context/AuthContext';
 import { formatDate, formatTime } from '../utils/dateTime';
 import { generateTicketPDF } from '../utils/pdfGenerator';
 
 const BookingFlow = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   const { flight } = location.state || {};
 
   const [step, setStep] = useState(1); // 1: Seats, 2: Passengers, 3: Payment, 4: Confirmation
   const [selectedSeats, setSelectedSeats] = useState([]);
+  const [seatClass, setSeatClass] = useState('economy'); // economy, business, first
   const [passengers, setPassengers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -110,7 +113,7 @@ const BookingFlow = () => {
       }
 
       // Create booking (payment simulation happens on backend)
-      const response = await bookingService.createBooking(flight._id, selectedSeats, passengers);
+      const response = await bookingService.createBooking(flight._id, selectedSeats, passengers, seatClass);
       setBooking(response.data.booking);
       setStep(4);
     } catch (err) {
@@ -127,8 +130,11 @@ const BookingFlow = () => {
     }
   };
 
-  // Calculate total price
-  const totalPrice = (flight.currentDynamicPrice || flight.baseFare) * selectedSeats.length;
+  // Calculate total price with class multiplier
+  const classMultipliers = { economy: 1, business: 1.5, first: 2 };
+  const basePricePerSeat = flight.currentDynamicPrice || flight.baseFare || 0;
+  const pricePerSeat = basePricePerSeat * classMultipliers[seatClass];
+  const totalPrice = pricePerSeat * selectedSeats.length;
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -182,8 +188,42 @@ const BookingFlow = () => {
         {/* Step 1: Seat Selection */}
         {step === 1 && (
           <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-2xl font-bold mb-6">Select Your Seats</h2>
+            <h2 className="text-2xl font-bold mb-6">Select Your Seats & Class</h2>
             
+            {/* Seat Class Selection */}
+            <div className="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Select Booking Class</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {['economy', 'business', 'first'].map((cls) => {
+                  const multipliers = { economy: 1, business: 1.5, first: 2 };
+                  const prices = {
+                    economy: flight.baseFare || 0,
+                    business: (flight.baseFare || 0) * 1.5,
+                    first: (flight.baseFare || 0) * 2,
+                  };
+                  return (
+                    <button
+                      key={cls}
+                      onClick={() => setSeatClass(cls)}
+                      className={`p-4 rounded-lg border-2 transition ${
+                        seatClass === cls
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-300 bg-white hover:border-gray-400'
+                      }`}
+                    >
+                      <p className="font-bold text-gray-800 capitalize">{cls}</p>
+                      <p className="text-sm text-gray-600">${prices[cls].toFixed(2)} per seat</p>
+                      <p className="text-xs text-gray-500 mt-2">
+                        {cls === 'economy' && '✓ Standard seating'}
+                        {cls === 'business' && '✓ Extra legroom, meals'}
+                        {cls === 'first' && '✓ Premium service, lounge access'}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="mb-8">
               <div className="flex justify-center gap-2 mb-8">
                 <div className="flex items-center gap-2">
@@ -235,8 +275,13 @@ const BookingFlow = () => {
                 Selected Seats: {selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None'}
               </p>
               <p className="text-sm text-gray-600 mt-1">
-                Price per seat: ${(flight.currentDynamicPrice || flight.baseFare).toFixed(2)}
+                Price per seat ({seatClass}): ${pricePerSeat.toFixed(2)} (Base: ${basePricePerSeat.toFixed(2)} × {classMultipliers[seatClass]})
               </p>
+              {selectedSeats.length > 0 && (
+                <p className="text-sm font-semibold text-blue-700 mt-2">
+                  Total: ${totalPrice.toFixed(2)}
+                </p>
+              )}
             </div>
 
             <div className="flex gap-4">
@@ -252,7 +297,18 @@ const BookingFlow = () => {
                     setError('Please select at least one seat');
                     return;
                   }
-                  setPassengers(Array.from({ length: selectedSeats.length }, () => ({ name: '', email: '', phone: '', title: 'Mr' })));
+                  // Pre-fill first passenger with user data, rest empty
+                  const newPassengers = Array.from({ length: selectedSeats.length }, (_, index) => 
+                    index === 0 
+                      ? { 
+                          name: user?.name || '', 
+                          email: user?.email || '', 
+                          phone: user?.phone || '', 
+                          title: 'Mr' 
+                        }
+                      : { name: '', email: '', phone: '', title: 'Mr' }
+                  );
+                  setPassengers(newPassengers);
                   setStep(2);
                 }}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700"
@@ -386,12 +442,16 @@ const BookingFlow = () => {
                     <span className="font-semibold">{selectedSeats.join(', ')}</span>
                   </div>
                   <div className="flex justify-between">
+                    <span>Class:</span>
+                    <span className="font-semibold capitalize">{seatClass}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span>Passengers:</span>
                     <span className="font-semibold">{(passengers || []).length}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Price per seat:</span>
-                    <span className="font-semibold">${(flight.currentDynamicPrice || flight.baseFare).toFixed(2)}</span>
+                    <span className="font-semibold">${pricePerSeat.toFixed(2)}</span>
                   </div>
                   <div className="border-t border-gray-300 pt-3 flex justify-between text-base">
                     <span className="font-bold">Total Amount:</span>

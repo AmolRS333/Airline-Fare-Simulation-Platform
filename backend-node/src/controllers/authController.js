@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
 const { generateTokens } = require('../utils/jwt');
 const { validateRegister, validateLogin } = require('../middleware/validation');
 
@@ -126,12 +127,49 @@ const forgotPassword = async (req, res) => {
 
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select('-password');
+    const userId = req.user.userId;
+    const user = await User.findById(userId).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json(user);
+
+    // Get booking summary for this user
+    const Booking = require('../models/Booking');
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+    const bookingStats = await Booking.aggregate([
+      { $match: { userId: userObjectId } },
+      {
+        $group: {
+          _id: null,
+          totalBookings: { $sum: 1 },
+          confirmedBookings: {
+            $sum: { $cond: [{ $eq: ['$status', 'confirmed'] }, 1, 0] },
+          },
+          pendingBookings: {
+            $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] },
+          },
+          cancelledBookings: {
+            $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] },
+          },
+          totalSpent: { $sum: '$pricePaid' },
+        },
+      },
+    ]);
+
+    const stats = bookingStats[0] || {
+      totalBookings: 0,
+      confirmedBookings: 0,
+      pendingBookings: 0,
+      cancelledBookings: 0,
+      totalSpent: 0,
+    };
+
+    res.json({
+      user,
+      bookingStats: stats,
+    });
   } catch (error) {
+    console.error('Profile error:', error);
     res.status(500).json({ message: 'Error fetching profile', error: error.message });
   }
 };
@@ -160,10 +198,41 @@ const updateProfile = async (req, res) => {
   }
 };
 
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Current and new passwords are required' });
+    }
+
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error changing password', error: error.message });
+  }
+};
+
 module.exports = {
   register,
   login,
   forgotPassword,
   getProfile,
   updateProfile,
+  changePassword,
 };

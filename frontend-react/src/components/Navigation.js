@@ -27,6 +27,9 @@ const Navigation = () => {
               <Link to="/bookings" className="hover:text-blue-100">
                 My Bookings
               </Link>
+              <Link to="/profile" className="hover:text-blue-100">
+                Profile
+              </Link>
 
               {user.role === 'admin' && (
                 <>

@@ -207,7 +207,7 @@ const FlightSearch = () => {
         </div>
 
         <div className="mt-4 text-center text-sm text-gray-500">
-          Prices auto-refresh every 10 seconds
+          Prices and seat availability auto-refresh every 10 seconds for real-time updates
         </div>
       </div>
     </div>
