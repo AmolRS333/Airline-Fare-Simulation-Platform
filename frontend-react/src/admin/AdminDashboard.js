@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { adminService } from '../services/index';
 import FlightManagement from './FlightManagement';
 import SeatManagement from './SeatManagement';
@@ -9,15 +10,37 @@ import HealthMonitor from './HealthMonitor';
 import PricingControl from './PricingControl';
 import EmailNotificationManager from './EmailNotificationManager';
 import PDFTemplateEditor from './PDFTemplateEditor';
+import ExplainablePricing from '../components/ExplainablePricing';
+import PriceEvolutionPlayback from '../components/PriceEvolutionPlayback';
+import DemandForecasting from '../components/DemandForecasting';
+import UserBehaviorPricing from '../components/UserBehaviorPricing';
+import EventAwarePricing from '../components/EventAwarePricing';
+import MultiAgentSimulation from '../components/MultiAgentSimulation';
+import FraudDetection from '../components/FraudDetection';
+import WhatIfSimulator from '../components/WhatIfSimulator';
+import AdminAnalyticsDashboard from '../components/AdminAnalyticsDashboard';
+import SelfLearningRules from '../components/SelfLearningRules';
 
 const AdminDashboard = () => {
-  const [activePanel, setActivePanel] = useState('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activePanel, setActivePanel] = useState(searchParams.get('panel') || 'overview');
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchDashboardStats();
   }, []);
+
+  useEffect(() => {
+    // Update URL when activePanel changes
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (activePanel !== 'overview') {
+      newSearchParams.set('panel', activePanel);
+    } else {
+      newSearchParams.delete('panel');
+    }
+    setSearchParams(newSearchParams, { replace: true });
+  }, [activePanel, searchParams, setSearchParams]);
 
   const fetchDashboardStats = async () => {
     try {
@@ -40,7 +63,17 @@ const AdminDashboard = () => {
     { id: 'health', label: 'Health', icon: '🏥' },
     { id: 'pricing', label: 'Pricing', icon: '💰' },
     { id: 'email', label: 'Email', icon: '📧' },
-    { id: 'pdf', label: 'PDF', icon: '📄' }
+    { id: 'pdf', label: 'PDF', icon: '📄' },
+    { id: 'explainable', label: 'Explainable Pricing', icon: '🔍' },
+    { id: 'evolution', label: 'Price Evolution', icon: '⏱️' },
+    { id: 'forecasting', label: 'Demand Forecasting', icon: '🔮' },
+    { id: 'behavior', label: 'User Behavior', icon: '👤' },
+    { id: 'events', label: 'Event Pricing', icon: '🎪' },
+    { id: 'simulation', label: 'Multi-Agent Sim', icon: '🤖' },
+    { id: 'fraud', label: 'Fraud Detection', icon: '🛡️' },
+    { id: 'whatif', label: 'What-If Simulator', icon: '🔬' },
+    { id: 'analytics', label: 'Advanced Analytics', icon: '📊' },
+    { id: 'learning', label: 'Self-Learning', icon: '🧠' }
   ];
 
   return (
@@ -143,6 +176,26 @@ const AdminDashboard = () => {
           <EmailNotificationManager />
         ) : activePanel === 'pdf' ? (
           <PDFTemplateEditor />
+        ) : activePanel === 'explainable' ? (
+          <ExplainablePricing />
+        ) : activePanel === 'evolution' ? (
+          <PriceEvolutionPlayback />
+        ) : activePanel === 'forecasting' ? (
+          <DemandForecasting />
+        ) : activePanel === 'behavior' ? (
+          <UserBehaviorPricing />
+        ) : activePanel === 'events' ? (
+          <EventAwarePricing />
+        ) : activePanel === 'simulation' ? (
+          <MultiAgentSimulation />
+        ) : activePanel === 'fraud' ? (
+          <FraudDetection />
+        ) : activePanel === 'whatif' ? (
+          <WhatIfSimulator />
+        ) : activePanel === 'analytics' ? (
+          <AdminAnalyticsDashboard />
+        ) : activePanel === 'learning' ? (
+          <SelfLearningRules />
         ) : null}
       </div>
     </div>

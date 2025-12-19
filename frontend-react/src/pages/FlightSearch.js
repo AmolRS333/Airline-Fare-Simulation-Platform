@@ -15,6 +15,7 @@ const FlightSearch = () => {
   const [filterPrice, setFilterPrice] = useState('');
   
   const [priceRefresh, setPriceRefresh] = useState(0);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
 
   // Auto-search on mount with default values
   const handleSearch = useCallback(async (e) => {
@@ -40,6 +41,8 @@ const FlightSearch = () => {
       
       if (response.data && Array.isArray(response.data)) {
         setFlights(response.data);
+        setLastUpdate(new Date());
+        console.log('Flight prices updated:', response.data.map(f => ({ id: f._id, price: f.currentDynamicPrice })));
         if (response.data.length === 0) {
           setError('No flights found for this route on the selected date.');
         }
@@ -208,6 +211,8 @@ const FlightSearch = () => {
 
         <div className="mt-4 text-center text-sm text-gray-500">
           Prices and seat availability auto-refresh every 10 seconds for real-time updates
+          <br />
+          Last updated: {lastUpdate.toLocaleTimeString()}
         </div>
       </div>
     </div>

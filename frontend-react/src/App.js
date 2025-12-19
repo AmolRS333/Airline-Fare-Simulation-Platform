@@ -103,11 +103,11 @@ function App() {
             }
           />
 
-          {/* Default Route - Force login if not authenticated */}
-          <Route path="/" element={user ? <Navigate to="/search" /> : <Navigate to="/login" />} />
+          {/* Default Route */}
+          <Route path="/" element={<Navigate to={user ? (user.role === 'admin' ? '/admin/dashboard' : '/search') : '/login'} />} />
 
-          {/* 404 Fallback */}
-          <Route path="*" element={<Navigate to={user ? "/search" : "/login"} />} />
+          {/* 404 Fallback - Let React Router handle unmatched routes */}
+          <Route path="*" element={<div>Page not found</div>} />
         </Routes>
       </div>
     </Router>

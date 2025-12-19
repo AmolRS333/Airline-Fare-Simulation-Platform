@@ -108,8 +108,10 @@ const searchFlights = async (req, res) => {
 
     // Fetch dynamic prices from Python service (with timeout)
     const flightWithPrices = [];
+    let priceCounter = 0;
     for (let flight of flights) {
       try {
+        console.log(`📡 Calling Python pricing for flight ${flight._id}: baseFare=${flight.baseFare}, available=${flight.availableSeats}/${flight.totalSeats}`);
         const response = await axios.post(`${PYTHON_PRICING_URL}/api/price`, {
           flightId: flight._id.toString(),
           baseFare: flight.baseFare,
@@ -119,6 +121,7 @@ const searchFlights = async (req, res) => {
         });
 
         if (response.data && response.data.price) {
+          console.log(`✅ Python pricing response for ${flight._id}: $${response.data.price} (multiplier: ${response.data.multiplier})`);
           flight.currentDynamicPrice = response.data.price;
           flight.bookingCount = response.data.bookingCount || 0;
 
@@ -126,17 +129,20 @@ const searchFlights = async (req, res) => {
           const fareHistory = new FareHistory({
             flightId: flight._id,
             baseFare: flight.baseFare,
-            calculatedFare: response.data.price,
+            calculatedFare: flight.currentDynamicPrice,
             dynamicMultiplier: response.data.multiplier || 1,
             remainingSeatsPercentage: (flight.availableSeats / flight.totalSeats) * 100,
             hoursUntilDeparture: (flight.departureTime - new Date()) / (1000 * 60 * 60),
             demandLevel: response.data.demandLevel || 'medium',
           });
           await fareHistory.save();
+        } else {
+          console.warn(`⚠️ Invalid response from Python service for flight ${flight._id}`);
+          flight.currentDynamicPrice = flight.baseFare;
         }
       } catch (error) {
         // Use base fare if Python service fails
-        console.warn(`Warning: Could not fetch dynamic price for flight ${flight._id}: ${error.message}`);
+        console.warn(`❌ Failed to get dynamic price for flight ${flight._id}: ${error.message}`);
         flight.currentDynamicPrice = flight.baseFare;
       }
       flightWithPrices.push(flight);

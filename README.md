@@ -10,10 +10,11 @@ This project consists of three main components:
 - User authentication with JWT
 - Flight search and management
 - Multi-step booking workflow with concurrency control
-- Admin dashboard APIs
-- Integration with Python pricing service
-- Email notifications
-- PDF receipt generation
+- Admin dashboard APIs with comprehensive management features
+- Dynamic pricing integration with Python service
+- Email notifications and PDF receipt generation
+- Advanced analytics and reporting
+- Fraud detection and system health monitoring
 
 ### 2. **Dynamic Pricing Engine (Python + FastAPI)**
 - Real-time dynamic price calculation
@@ -28,8 +29,10 @@ This project consists of three main components:
 - Flight search with real-time price refresh
 - Multi-step booking workflow
 - User booking management
-- Admin dashboard with analytics
+- Comprehensive admin dashboard with analytics
+- Advanced pricing simulation tools
 - PDF receipt download
+- Real-time seat polling and updates
 
 ## 🚀 Quick Start
 
@@ -70,6 +73,13 @@ npm start
 ```
 
 Frontend runs on `http://localhost:3000`
+
+#### 4. Diagnostic Check (Optional)
+```bash
+node diagnose.js
+```
+
+This will verify all services are running and provide startup guidance.
 
 ## 📌 Key Features
 
@@ -123,6 +133,25 @@ Frontend runs on `http://localhost:3000`
   - Peak booking hours
   - Revenue analytics
 - Real-time dashboard charts
+- System health monitoring
+- Pricing control and rule management
+- Email notification management
+- PDF template customization
+- Fraud detection and alerts
+- Demand forecasting
+- Advanced simulation tools
+
+### 🔍 Advanced Analytics & Simulation
+- **Demand Forecasting**: Predict future booking patterns and adjust pricing
+- **Fraud Detection**: Monitor suspicious activities and booking anomalies
+- **Multi-Agent Simulation**: Simulate market dynamics with multiple pricing agents
+- **Event-Aware Pricing**: Adjust prices based on external events and holidays
+- **Explainable Pricing**: Transparent pricing decisions with reasoning
+- **Price Evolution Playback**: Historical price changes visualization
+- **Self-Learning Rules**: AI-powered pricing rule optimization
+- **User Behavior Pricing**: Dynamic pricing based on user profiles and behavior
+- **What-If Simulator**: Scenario planning for pricing strategies
+- **Real-Time Seat Polling**: Live seat availability updates
 
 ### 🔐 Security
 - Password hashing with bcryptjs
@@ -265,6 +294,25 @@ pytest
 npm run test
 ```
 
+### Smoke Test
+Run end-to-end booking flow test:
+```bash
+cd backend-node
+node scripts/smoke-test.js
+```
+
+### Diagnostic Tool
+Check system health and connectivity:
+```bash
+node diagnose.js
+```
+This tool verifies:
+- Backend service availability
+- Python pricing service status
+- MongoDB connection and data
+- API endpoint responsiveness
+- Provides startup instructions
+
 ## 📦 Key Dependencies
 
 ### Node.js
@@ -298,6 +346,9 @@ The system sends emails for:
 - **Demand Updates**: Every 1 minute in pricing engine
 - **Seat Lock Expiry**: 2 minutes timeout
 - **Analytics Updates**: Real-time on admin dashboard
+- **Seat Polling**: Live seat availability updates
+- **System Health Monitoring**: Continuous status checks
+- **Fraud Detection**: Real-time suspicious activity monitoring
 
 ## 🚦 Rate Limiting
 
@@ -354,6 +405,8 @@ POST /api/bookings
 
 ```
 FBS-DP/
+├── diagnose.js                    # System diagnostic tool
+├── ADMIN_IMPLEMENTATION_CHECKLIST.md  # Admin features checklist
 ├── backend-node/
 │   ├── src/
 │   │   ├── models/
@@ -362,6 +415,8 @@ FBS-DP/
 │   │   ├── middleware/
 │   │   ├── utils/
 │   │   └── config/
+│   ├── scripts/
+│   │   └── smoke-test.js         # End-to-end booking test
 │   ├── tests/
 │   ├── package.json
 │   └── server.js
@@ -373,10 +428,34 @@ FBS-DP/
     ├── src/
     │   ├── pages/
     │   ├── components/
+    │   │   ├── AdminAnalyticsDashboard.js
+    │   │   ├── DemandForecasting.js
+    │   │   ├── EventAwarePricing.js
+    │   │   ├── ExplainablePricing.js
+    │   │   ├── FraudDetection.js
+    │   │   ├── MultiAgentSimulation.js
+    │   │   ├── PriceEvolutionPlayback.js
+    │   │   ├── SelfLearningRules.js
+    │   │   ├── UserBehaviorPricing.js
+    │   │   ├── WhatIfSimulator.js
+    │   │   └── ...
     │   ├── services/
     │   ├── context/
     │   ├── utils/
+    │   ├── hooks/
+    │   │   └── useSeatPolling.js
     │   ├── admin/
+    │   │   ├── AdminDashboard.js
+    │   │   ├── BookingManagement.js
+    │   │   ├── EmailNotificationManager.js
+    │   │   ├── FlightManagement.js
+    │   │   ├── HealthMonitor.js
+    │   │   ├── ManageFlights.js
+    │   │   ├── PDFTemplateEditor.js
+    │   │   ├── PricingControl.js
+    │   │   ├── ReportsDashboard.js
+    │   │   ├── SeatManagement.js
+    │   │   └── UserManagement.js
     │   └── App.js
     ├── public/
     ├── package.json
@@ -428,3 +507,5 @@ For issues, feature requests, or questions, please refer to the documentation or
 ---
 
 **Built with ❤️ using MERN + Python FastAPI**
+
+*Project Status: 95% Complete - Core booking system fully functional with comprehensive admin panel and advanced analytics features. Backend admin endpoints implementation in progress.*
